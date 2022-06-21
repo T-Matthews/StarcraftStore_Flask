@@ -2,13 +2,14 @@ from sqlalchemy import create_engine
 
 # Import data-frome from creation in 'unit_data'
 from unit_data import df
+import os
 
 
 param_dic = {
     "host"      : "heffalump.db.elephantsql.com",
     "database"  : "ysxdgfvu",
     "user"      : "ysxdgfvu",
-    "password"  : "AJbaHqPALPhgGHugprwDTOmrhcfLnHos"
+    "password"  : os.environ.get('ELEPHANT_SQL_PASSWORD')
 }
 
 csv_file = "../data/global-temp-monthly.csv"
