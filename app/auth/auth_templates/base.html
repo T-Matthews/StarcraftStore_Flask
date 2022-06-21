@@ -13,14 +13,31 @@
 
 <body>
     <div class="container">
-        <div class="row justify-content-center">
-            <img src="" alt="" />
+        <div id="logorow" class="row justify-content-center">
+            <a href="{{url_for('home')}}">
+                <img id ="logoimg" src="https://media.moddb.com/cache/images/downloads/1/21/20234/thumb_620x2000/starcraft2_logo.jpg" alt="" />
+            </a>
         </div>
-        <div class="col-5">
+        <div class="row justify-content-center">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category,message in messages %}
+            <div class="justify-content-center alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <div id="form-block" class="justify-content-center col-4 offset-4">
             {% block content %}
 
             {% endblock content %}
-        </div>
+
     </div>
 
 

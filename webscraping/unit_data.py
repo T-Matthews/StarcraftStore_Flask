@@ -1,8 +1,35 @@
+from datetime import datetime
 from gettext import find
 from bs4 import BeautifulSoup
 import requests
 import re
 from main import initial_units
+import pprint
+import pandas as pd
+
+import psycopg2
+
+
+z_flag=True
+t_flag=True
+p_flag=True
+mineral_flag=True
+vespene_flag=True
+# grid_unit={}
+id=0
+misc_images={}
+d={
+    'id':[],
+    'name':[],
+    'race':[],
+    'minerals':[],
+    'vespene':[],
+    'supply':[],
+    'desc':[],
+    'unit_tier':[],
+    'unit_image':[],    
+    'url':[]
+    }
 
 
 for k,v in initial_units.items():
@@ -10,7 +37,8 @@ for k,v in initial_units.items():
     soup = BeautifulSoup(data,'lxml')
 
     sidebar=soup.find('aside')
-
+    
+    #Get all unit model images
     if k == 'Dark templar':
         image=sidebar.find('div',attrs={'data-source':'image2'})
         image=image.find('div',attrs={'class':'wds-tab__content'})
@@ -21,18 +49,38 @@ for k,v in initial_units.items():
     elif k == 'Interceptor':
         image=soup.find('figure',attrs={'data-source':'image'})
         image=image.img['src']
-
     else:
         image=soup.find('figure',attrs={'data-source':'image2'})
         image=image.a['href']
    
    
-   
+    #Get race of each unit; terran/zerg/protoss
     race=sidebar.find('div',attrs={'data-source' : 'race'})
     race=race.find('a',attrs={'href': True})
     race=race.get_text('a')
 
-     
+    #If the first unit of each race, get that race's unique image for supply
+    if race == 'Protoss' and p_flag==True:
+        p_flag=False
+        p_supply_image=soup.find('img',attrs={'alt':'Psi'})['src']
+    
+    if race == 'Terran' and t_flag==True:
+        t_flag=False
+        t_supply_image=soup.find('img',attrs={'alt':'Supply'})['src']
+    
+    if race == 'Zerg' and z_flag==True:
+        z_flag=False
+        z_supply_image=soup.find('img',attrs={'alt':'Control'})['src']
+    
+    #Get minerals and vespene icons. Not needed every loop, will just grab from stalker
+    if k=='Stalker':
+        minerals_icon=soup.find('img',attrs={'alt':'Minerals'})['src']
+        vespene_icon=soup.find('div',attrs={'data-source':'costgas'})
+        vespene_icon=vespene_icon.find('a',attrs={'class':'image'})['href']
+
+
+
+    #About half of the units have a 'role' description. Grab that if it exists. 
     try:
         desc=sidebar.find('div',attrs={'data-source' : 'role'})
         desc=desc.find('div',attrs={'class': 'pi-font'})
@@ -40,7 +88,7 @@ for k,v in initial_units.items():
     except:
         desc=""
     
- 
+    #If a unit costs minerals, grab that value. Shave off extra blank space or text
     if k in ['Archon','MULE','Larva','Broodling','Infested terran','Changeling','Locust']:
         minerals=0
     else:
@@ -55,7 +103,7 @@ for k,v in initial_units.items():
         minerals=minerals.replace(" ","")
 
     
-
+     #If a unit costs gas, grab that value. Shave off extra blank space or text
     if k in ['Archon','MULE','Queen','Warp prism','Interceptor','Overlord','Probe','SCV','Drone','Larva','Broodling','Infested terran','Changeling','Locust','Marine','Hellion','Hellbat','Zealot','Zergling']:
         vespene=0
     elif k == 'Ravager':
@@ -72,6 +120,7 @@ for k,v in initial_units.items():
             vespene=vespene[0:vespene.find('(')]
         vespene=vespene.replace(" ","")
 
+     #If a unit costs supply, grab that value. Shave off extra blank space or text
     if k in ['MULE','Interceptor','Overlord','Overseer','Interceptor','Larva','Broodling','Infested terran','Changeling','Locust']:
         supply='0'
     else:
@@ -85,7 +134,6 @@ for k,v in initial_units.items():
     UNIT TIER IS A NON-TECHNICAL METRIC THAT IS NEITHER AGREED UPON OR IMPORTANT IN A MECHANICAL WAY.
     HOWEVER, I WANT TO DISPLAY DATA BASED ON TIER, THEREFORE I HAVE MANUALLY ENTERED UNIT TIERS BELOW.
     """
-    print(k)
     if k in {'Probe','Interceptor','SCV','MULE','Larva','Drone','Overlord',
     'Overseer','Broodling','Changeling','Infested terran','Locust'}:
         tier = 0
@@ -101,27 +149,138 @@ for k,v in initial_units.items():
         tier = 3
     if k in {'Carrier','Colossus','Tempest','Mothership','Thor','Battlecruiser',
     'Ultralisk','Brood lord'}:
-        tier = 'Legendary'
+        tier = 4
+    """
+    ###  id = db.Column(db.Integer, primary_key=True)
+    ###  name = db.Column(db.String(50), nullable=False)
+    ###  created=db.Column(db.DateTime, default=datetime.utcnow())
+    ###  race = db.Column(db.String(20), nullable=False)
+    ###  minerals = db.Column(db.Integer)
+    ###  vespene = db.Column(db.Integer)
+    ###  supply = db.Column(db.Integer)
+    ###  desc = db.Column(db.String(300))
+    ###  unit_tier = db.Column(db.Integer)
+    ###  unit_image = db.Column(db.String(80))
+    ###  url=db.Column(db.String(80))
+
+    """
+    d['id'].append(id)
+    d['name'].append(k.lower())
+    d['race'].append(race)
+    d['minerals'].append(int(minerals))
+    d['vespene'].append(int(vespene))
+    #Banelings have .5 supply. 
+    # Irritating, so am rounding to 1. Hope to refine later on.
+    if supply =='0.5':
+        supply='1'
+    d['supply'].append(int(supply))
+    d['desc'].append(desc)
+    d['unit_tier'].append(tier)
+    d['unit_image'].append(image)
+    d['url'].append(v['url'])
+    
+    id+=1
+ 
+
+    
+    print(k)
+
+#Add oneoffs after the fact!
+misc_images['p_supply_icon']=p_supply_image
+misc_images['t_supply_icon']=t_supply_image
+misc_images['z_supply_icon']=z_supply_image
+misc_images['mineral_icon']=minerals_icon
+misc_images['vespene_icon']=vespene_icon
 
 
 
-    initial_units[k]['image']=image
-    initial_units[k]['race']=race
-    initial_units[k]['desc']=desc
-    initial_units[k]['minerals']=minerals
-    initial_units[k]['vespene']=vespene
-    initial_units[k]['supply']=supply
-    initial_units[k]['tier']=tier
+# print(d)
 
-
-    # # description=Text page has so many hyperlinks embedded that extraction of text
-    # #   blocks will be a real chore. May come back to this, but likely will not.
+df=pd.DataFrame(data=d)
+print(df)
 
 
 
 
 
-print(initial_units)
+# Starcraft_Units={
+#         'race':{
+#             'Protoss':{
+#                 'units':{
+#                     'tier0':{},
+#                     'tier1':{},
+#                     'tier2':{},
+#                     'tier3':{},
+#                     'tier4':{},
+#                 },
+#                 'p_supply_icon':""
+#             },
+#             'Terran':{
+#                 'units':{
+#                     'tier0':{},
+#                     'tier1':{},
+#                     'tier2':{},
+#                     'tier3':{},
+#                     'tier4':{},
+#                 },
+#                 't_supply_icon':""
+#             },
+#             'Zerg':{
+#                 'units':{
+#                     'tier0':{},
+#                     'tier1':{},
+#                     'tier2':{},
+#                     'tier3':{},
+#                     'tier4':{},
+#                 },
+#                 'z_supply_icon':""
+#             },
+#         },
+#         "mineral_icon":"",
+#         "vespene_icon":""
+#     }
+#
 
+   # unit= {
+    #         'image':image,
+    #         'race':race,
+    #         'desc':desc,
+    #         'minerals':minerals,
+    #         'vespene':vespene,
+    #         'supply':supply,
+    #         'url':v['url']}
+    
+    
+    
+    # if race == "Protoss" and tier == 'tier0':
+    #     Starcraft_Units['race']['Protoss']['units']['tier0'][k]=unit 
+    # elif race == "Protoss" and tier == 'tier1':
+    #     Starcraft_Units['race']['Protoss']['units']['tier1'][k]=unit 
+    # elif race == "Protoss" and tier == 'tier2':
+    #     Starcraft_Units['race']['Protoss']['units']['tier2'][k]=unit 
+    # elif race == "Protoss" and tier == 'tier3':
+    #     Starcraft_Units['race']['Protoss']['units']['tier3'][k]=unit 
+    # elif race == "Protoss" and tier == 'tier4':
+    #     Starcraft_Units['race']['Protoss']['units']['tier4'][k]=unit 
 
-#GET SUPPLY ICONS, MINERAL, VESPENE icons.
+    # elif race == "Terran" and tier == 'tier0':
+    #     Starcraft_Units['race']['Terran']['units']['tier0'][k]=unit 
+    # elif race == "Terran" and tier == 'tier1':
+    #     Starcraft_Units['race']['Terran']['units']['tier1'][k]=unit 
+    # elif race == "Terran" and tier == 'tier2':
+    #     Starcraft_Units['race']['Terran']['units']['tier2'][k]=unit 
+    # elif race == "Terran" and tier == 'tier3':
+    #     Starcraft_Units['race']['Terran']['units']['tier3'][k]=unit 
+    # elif race == "Terran" and tier == 'tier4':
+    #     Starcraft_Units['race']['Terran']['units']['tier4'][k]=unit 
+
+    # elif race == "Zerg" and tier == 'tier0':
+    #     Starcraft_Units['race']['Zerg']['units']['tier0'][k]=unit 
+    # elif race == "Zerg" and tier == 'tier1':
+    #     Starcraft_Units['race']['Zerg']['units']['tier1'][k]=unit 
+    # elif race == "Zerg" and tier == 'tier2':
+    #     Starcraft_Units['race']['Zerg']['units']['tier2'][k]=unit 
+    # elif race == "Zerg" and tier == 'tier3':
+    #     Starcraft_Units['race']['Zerg']['units']['tier3'][k]=unit 
+    # elif race == "Zerg" and tier == 'tier4':
+    #     Starcraft_Units['race']['Zerg']['units']['tier4'][k]=unit 
