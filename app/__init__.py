@@ -5,6 +5,7 @@ app.config.from_object(Config)
 from . import routes
 from .auth.routes import auth
 from .api.routes import api
+from flask_cors import CORS
 
 #DB imports
 from .models import db, login
@@ -14,6 +15,7 @@ app.register_blueprint(auth)
 db.init_app(app)
 migrate = Migrate(app,db)
 
+CORS(app)
 
 #setup login manager
 login.init_app(app)
