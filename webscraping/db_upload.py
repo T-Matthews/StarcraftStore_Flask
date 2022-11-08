@@ -9,7 +9,7 @@ param_dic = {
     "host"      : "heffalump.db.elephantsql.com",
     "database"  : "ysxdgfvu",
     "user"      : "ysxdgfvu",
-    "password"  : os.environ.get('ELEPHANT_SQL_PASSWORD')
+    "password"  : "AJbaHqPALPhgGHugprwDTOmrhcfLnHos"
 }
 
 csv_file = "../data/global-temp-monthly.csv"

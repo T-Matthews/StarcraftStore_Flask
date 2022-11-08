@@ -1,13 +1,40 @@
+
 {% extends 'components/layout.html' %}
 {% block content %}
 
 
+<div class = "about">
+    <div class="title">
+        <h1>STARCRAFT UNIT API</h1>
+    </div>
+    <div class = "text-area">
+        <p class = "about-text">This project provides an API endpoint for general unit data for the units within the competitive Versus mode of the Blizzard game, Starcraft II. 
+            As a side web development project, I went looking for this endpoint, and couldn't find it available online. So, I put this together to provide JSON
+            data for the units, including wiki link, photo, resource costs, descriptions, and various other bits of data. All info was webscraped from the 
+            excellent fan made <a href="https://starcraft.fandom.com/wiki/StarCraft_II">Starcraft II wiki</a>.
+        </p>
+        <br>
+        <p class = "about-text">There is a link to the API endpoint above, in the navbar. The API also contains endpoints for each specific race, if you do not want data from the other two races.
+            There are also delete, update, and create routes that are tokenized. If any errors are discovered, please <a href="https://t-matthews.com">let me know</a>. 
 
-
-
-<h1>This is the About Page!</h1>
-
-
-
-
+        </p>
+        <div class="about-routes">
+            <h3>API ROUTES</h3>
+            <ul>
+                <li>
+                    <a class="link" href="{{ url_for('api.getUnits') }}">All Units</a>
+                </li>
+                <li>
+                    <a class="link" href="{{ url_for('api.getProtoss') }}">Protoss Units</a>
+                </li>
+                <li>
+                    <a class="link" href="{{ url_for('api.getTerran') }}">Terran Units</a>
+                </li>
+                <li>
+                    <a class="link" href="{{ url_for('api.getZerg') }}">Zerg Units</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
 {% endblock content %}

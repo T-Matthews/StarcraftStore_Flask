@@ -1,0 +1,21 @@
+.title{
+    height: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 3%;
+    
+}
+.text-area{
+    margin-top: 3%;
+    margin-left: 15%;
+    width: 70%;
+
+}
+.about-routes{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+}

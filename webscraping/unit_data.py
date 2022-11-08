@@ -52,8 +52,11 @@ for k,v in initial_units.items():
     else:
         image=soup.find('figure',attrs={'data-source':'image2'})
         image=image.a['href']
-   
-   
+    
+  
+    image=image[:image.index('.jpg')+4]
+
+    
     #Get race of each unit; terran/zerg/protoss
     race=sidebar.find('div',attrs={'data-source' : 'race'})
     race=race.find('a',attrs={'href': True})
@@ -284,3 +287,4 @@ print(df)
     #     Starcraft_Units['race']['Zerg']['units']['tier3'][k]=unit 
     # elif race == "Zerg" and tier == 'tier4':
     #     Starcraft_Units['race']['Zerg']['units']['tier4'][k]=unit 
+    
